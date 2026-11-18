@@ -39,7 +39,6 @@ export default function App() {
   const [savedTop, setSavedTop] = useState(undefined);
   const [toast, setToast] = useState(null);
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const [serverOk, setServerOk] = useState(null);
   const [, setTick] = useState(0);
   const bump = useCallback(() => setTick((t) => t + 1), []);
 
@@ -168,10 +167,7 @@ export default function App() {
       notify('success', `Downloaded “${name}” · ${formatBytes(blob.size)}`);
     } catch (err) {
       console.error(err);
-      notify(
-        'error',
-        err instanceof TypeError ? 'Can’t reach the export server. Is it running? (npm run dev)' : err.message,
-      );
+      notify('error', err.message);
     } finally {
       setExporting(false);
     }
@@ -502,13 +498,6 @@ export default function App() {
     };
   }, [doc, dirty, insertImage, openFile]);
 
-  // Is the export server up?
-  useEffect(() => {
-    fetch('/api/health')
-      .then((r) => setServerOk(r.ok))
-      .catch(() => setServerOk(false));
-  }, [exporting]);
-
   // ── Render ───────────────────────────────────────────────────
   return (
     <div className="app">
@@ -626,9 +615,6 @@ export default function App() {
               </span>
             </>
           )}
-          <span className={`server ${serverOk === false ? 'is-down' : serverOk ? 'is-up' : ''}`} title="The Node.js server builds your downloaded PDF">
-            <i /> {serverOk === false ? 'Server offline' : 'Server ready'}
-          </span>
         </div>
       </footer>
 

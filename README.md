@@ -9,7 +9,11 @@ npm install
 npm run dev        # web on http://localhost:5173, API on :3001
 ```
 
-Production: `npm run build && npm start`. Express then serves the built app and the API on port 3001.
+The app is fully client-side: PDFs are opened, edited and saved in the browser and never uploaded.
+`npm run build` produces static files in `dist/`, which is what gets deployed (Vercel config in `vercel.json`).
+
+`npm start` (after a build) runs the optional Express server. It serves `dist/` and also exposes the
+same PDF builder as an API, `POST /api/export`, for scripts or self-hosting.
 
 ## Features
 
@@ -29,16 +33,16 @@ client/src
   App.jsx                 state, shortcuts, page operations
   components/PageView.jsx PDF.js canvas (bottom) + Fabric.js canvas (top) per page
   lib/exportPdf.js        turns Fabric objects into an export spec
+  lib/buildPdf.js         pdf-lib: copies pages, applies rotation, draws edits (browser + Node)
   lib/history.js          document-wide undo/redo (per-page JSON snapshots)
 server
-  index.js                Express: POST /api/export
-  exportPdf.js            pdf-lib: copies pages, applies rotation, draws edits
+  index.js                optional Express server: static files + POST /api/export
 ```
 
 Fabric works in unscaled PDF points, and zoom is applied through Fabric's viewport, so edits never
 need converting when you zoom. On export, the client inverts the PDF.js viewport transform to get
 a matrix from screen space to PDF user space. That one matrix handles pages with built-in rotation
-and offset crop boxes. The server applies it with a single `cm` operator, then draws:
+and offset crop boxes. `buildPdf` applies it with a single `cm` operator, then draws:
 
 1. highlights as vector rectangles (multiply blend),
 2. one transparent PNG per page with ink, shapes and images,

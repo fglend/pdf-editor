@@ -10,7 +10,7 @@ import {
 } from 'pdf-lib';
 
 /**
- * Builds the edited PDF.
+ * Builds the edited PDF. Runs in the browser (the app) and in Node (server/index.js).
  *
  * Every item carries a 6-number matrix (computed on the client from the PDF.js
  * viewport) that maps the item's local drawing space straight into the page's

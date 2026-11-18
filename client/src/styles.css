@@ -1027,32 +1027,6 @@ input[type='range'] {
   border-left: 1px solid var(--border);
 }
 
-.server {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.server i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--text-3);
-}
-
-.server.is-up i {
-  background: var(--success);
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
-}
-
-.server.is-down {
-  color: var(--danger);
-}
-
-.server.is-down i {
-  background: var(--danger);
-}
-
 /* ── Toast ──────────────────────────────────────────────── */
 .toast {
   position: fixed;
@@ -1221,7 +1195,7 @@ kbd {
   .features {
     grid-template-columns: 1fr 1fr;
   }
-  .status-meta > span:not(.server) {
+  .status-meta > span {
     display: none;
   }
 }

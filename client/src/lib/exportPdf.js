@@ -1,18 +1,18 @@
 import { compose, invert } from './matrix.js';
 import { pageRotation } from './pdf.js';
+import { buildPdf } from './buildPdf.js';
 
 const OVERLAY_SCALE = 2.5; // raster layer resolution relative to 72 dpi
 // Covers are sent as vector rects; the server draws rects in this same order, before the raster layer.
 
 /**
- * Collects the edits from every page and asks the Node server to produce the final PDF.
+ * Collects the edits from every page and builds the final PDF with pdf-lib, right in the browser.
  * Text and highlights are sent as vectors (text stays selectable/searchable);
  * everything else is flattened into one transparent PNG per page.
  */
 export async function exportPdf({ bytes, pdfDoc, pages, registry, onProgress }) {
   const spec = { pages: [] };
-  const form = new FormData();
-  form.append('file', new Blob([bytes], { type: 'application/pdf' }), 'source.pdf');
+  const overlays = new Map();
 
   for (let i = 0; i < pages.length; i++) {
     onProgress?.(i / pages.length);
@@ -49,7 +49,7 @@ export async function exportPdf({ bytes, pdfDoc, pages, registry, onProgress }) 
         canvas.requestRenderAll();
 
         const name = `overlay-${i}.png`;
-        form.append('overlays', blob, name);
+        overlays.set(name, new Uint8Array(await blob.arrayBuffer()));
         entry.overlay = name;
         // The PNG is drawn into a y-up box of width × height, flip it back into viewport space first
         entry.overlayMatrix = compose([1, 0, 0, -1, 0, vp.height], toPdf);
@@ -58,15 +58,14 @@ export async function exportPdf({ bytes, pdfDoc, pages, registry, onProgress }) 
     spec.pages.push(entry);
   }
 
-  form.append('spec', JSON.stringify(spec));
-  onProgress?.(1);
-
-  const res = await fetch('/api/export', { method: 'POST', body: form });
-  if (!res.ok) {
-    const msg = await res.json().catch(() => null);
-    throw new Error(msg?.error || `Server responded with ${res.status}`);
+  try {
+    const out = await buildPdf(bytes.slice(), spec, overlays);
+    onProgress?.(1);
+    return new Blob([out], { type: 'application/pdf' });
+  } catch (err) {
+    if (/encrypt/i.test(err?.message ?? '')) throw new Error('This PDF is encrypted and cannot be re-saved.');
+    throw new Error(`Export failed: ${err?.message ?? 'unknown error'}`);
   }
-  return res.blob();
 }
 
 function textItems(obj, toPdf) {

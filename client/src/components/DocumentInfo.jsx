@@ -120,7 +120,7 @@ export default function DocumentInfo({ doc, pages, pageSize, activeIndex, totalE
             <Layers size={14} /> The original page content and links are kept.
           </li>
           <li>
-            <ShieldCheck size={14} /> Your PDF opens right in your browser. It’s sent to this app’s server only when you download.
+            <ShieldCheck size={14} /> Your PDF never leaves your device. It’s opened, edited and saved right in your browser.
           </li>
         </ul>
       </section>
